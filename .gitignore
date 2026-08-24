@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pytest_cache
+env/
+.venv/
+venv/
+
+# Streamlit secrets and credentials
+credentials.json
+.env
+.streamlit/secrets.toml
+
+# VSCode
+.vscode/
+credentials.json
+
+# My bash  tricks
+.local_bash_eternal_history
+.activate
+
