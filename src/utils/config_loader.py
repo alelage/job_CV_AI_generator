@@ -28,15 +28,19 @@ def load_credentials() -> Dict[str, str]:
         except Exception:
             secrets_obj = None
         if secrets_obj is not None:
+            found_any = False
             for key in defaults:
                 try:
                     # Access by key directly; avoid truthiness checks that call __len__
                     if key in secrets_obj:
                         defaults[key] = str(secrets_obj[key])
+                        found_any = True
                 except Exception:
-                    # If accessing secrets triggers parsing errors, ignore and continue
+                    # If accessing secrets triggers parsing errors for a key, ignore and continue
                     continue
-            return defaults
+            # Only trust Streamlit secrets when they actually contain at least one credential
+            if found_any:
+                return defaults
     # 2) credentials.json
     if CREDENTIALS_PATH.exists():
         try:

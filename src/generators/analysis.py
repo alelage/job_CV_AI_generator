@@ -40,7 +40,36 @@ CLEAN CV TEXT:
     requirements = data.get("requirements")
     if not isinstance(requirements, list):
         raise ValueError("The AI response did not contain a requirements list.")
-    cleaned = [{"text": str(x["text"]), "status": x["status"]} for x in requirements[:15] if isinstance(x, dict) and x.get("text") and x.get("status") in {"match", "missing"}]
+
+    cleaned: list[dict[str, str]] = []
+    for item in requirements[:15]:
+        if not isinstance(item, dict):
+            continue
+        raw_text = item.get("text", "")
+        # Normalize text to a string
+        if isinstance(raw_text, (list, dict)):
+            try:
+                text = json.dumps(raw_text, ensure_ascii=False)
+            except Exception:
+                text = str(raw_text)
+        else:
+            text = str(raw_text).strip()
+
+        raw_status = item.get("status")
+        # Accept booleans or strings for status
+        if isinstance(raw_status, bool):
+            status = "match" if raw_status else "missing"
+        elif isinstance(raw_status, str):
+            status = raw_status.strip().lower()
+        else:
+            status = str(raw_status).strip().lower()
+
+        if not text:
+            continue
+        if status not in {"match", "missing"}:
+            continue
+        cleaned.append({"text": text, "status": status})
+
     if not cleaned:
         raise ValueError("The AI did not return any valid requirements.")
     return {"requirements": cleaned}
