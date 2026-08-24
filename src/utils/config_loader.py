@@ -22,11 +22,21 @@ def load_credentials() -> Dict[str, str]:
         "groq_api_key": "",
     }
     # 1) Streamlit secrets (Cloud)
-    if st is not None and hasattr(st, "secrets") and st.secrets:
-        for key in defaults:
-            if key in st.secrets:
-                defaults[key] = str(st.secrets[key])
-        return defaults
+    if st is not None and hasattr(st, "secrets"):
+        try:
+            secrets_obj = st.secrets
+        except Exception:
+            secrets_obj = None
+        if secrets_obj is not None:
+            for key in defaults:
+                try:
+                    # Access by key directly; avoid truthiness checks that call __len__
+                    if key in secrets_obj:
+                        defaults[key] = str(secrets_obj[key])
+                except Exception:
+                    # If accessing secrets triggers parsing errors, ignore and continue
+                    continue
+            return defaults
     # 2) credentials.json
     if CREDENTIALS_PATH.exists():
         try:
