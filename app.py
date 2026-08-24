@@ -39,12 +39,28 @@ def initialise_state() -> None:
 
 def render_requirements(requirements: list[dict[str, str]]) -> None:
     for requirement in requirements:
-        match = requirement["status"] == "match"
+        raw_status = requirement.get("status")
+        # Normalize status
+        if isinstance(raw_status, bool):
+            match = bool(raw_status)
+        else:
+            match = str(raw_status).strip().lower() == "match"
+
         colour, background, label = (("#15803d", "#f0fdf4", "MATCH") if match else ("#b91c1c", "#fef2f2", "MISSING"))
+
+        raw_text = requirement.get("text", "")
+        # Sanitize text so we never render raw booleans like True/False
+        if isinstance(raw_text, bool) or raw_text is None:
+            text = "(no requirement text returned)"
+        else:
+            text = str(raw_text).strip()
+            if not text or text.lower() in {"false", "true", "none", "null"}:
+                text = "(no requirement text returned)"
+
         html = (
             f'<div style="background:{background}; border-left:5px solid {colour}; padding:0.65rem 0.9rem; margin:0.45rem 0; border-radius:4px;'>
             f'<span style="color:{colour}; font-weight:700; margin-right:0.7rem;">{label}</span>'
-            f"{requirement.get('text', '')}</div>"
+            f"{text}</div>"
         )
         st.markdown(html, unsafe_allow_html=True)
 
