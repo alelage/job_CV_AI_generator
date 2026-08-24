@@ -46,6 +46,9 @@ CLEAN CV TEXT:
         if not isinstance(item, dict):
             continue
         raw_text = item.get("text", "")
+        # Skip boolean or null-like raw_text values (they produce 'True'/'False')
+        if isinstance(raw_text, bool) or raw_text is None:
+            continue
         # Normalize text to a string
         if isinstance(raw_text, (list, dict)):
             try:
@@ -54,7 +57,12 @@ CLEAN CV TEXT:
                 text = str(raw_text)
         else:
             text = str(raw_text).strip()
-
+        # Ignore non-informative values that stringified to 'false'/'true' etc
+        if not text or text.lower() in {"false", "true", "none", "null"}:
+            continue
+        # Ignore overly short fragments that are unlikely to be requirements
+        if len(text) < 3:
+            continue
         raw_status = item.get("status")
         # Accept booleans or strings for status
         if isinstance(raw_status, bool):
@@ -64,7 +72,13 @@ CLEAN CV TEXT:
         else:
             status = str(raw_status).strip().lower()
 
+        # Ignore empty or non-informative texts (e.g., boolean literals returned as text)
         if not text:
+            continue
+        if text.strip().lower() in {"true", "false", "null", "none", "0", "1"}:
+            continue
+        # Heuristic: require at least one letter character in the text
+        if not re.search(r"[A-Za-z]", text):
             continue
         if status not in {"match", "missing"}:
             continue
