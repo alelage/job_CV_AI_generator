@@ -41,10 +41,12 @@ def render_requirements(requirements: list[dict[str, str]]) -> None:
     for requirement in requirements:
         match = requirement["status"] == "match"
         colour, background, label = (("#15803d", "#f0fdf4", "MATCH") if match else ("#b91c1c", "#fef2f2", "MISSING"))
-        st.markdown(
-            f'<div style="background:{background}; border-left:5px solid {colour}; padding:0.65rem 0.9rem; margin:0.45rem 0; border-radius:4px;'><span style="color:{colour}; font-weight:700; margin-right:0.7rem;">{label}</span>{requirement["text"]}</div>',
-            unsafe_allow_html=True,
+        html = (
+            f'<div style="background:{background}; border-left:5px solid {colour}; padding:0.65rem 0.9rem; margin:0.45rem 0; border-radius:4px;'>
+            f'<span style="color:{colour}; font-weight:700; margin-right:0.7rem;">{label}</span>'
+            f"{requirement.get('text', '')}</div>"
         )
+        st.markdown(html, unsafe_allow_html=True)
 
 
 def main() -> None:
