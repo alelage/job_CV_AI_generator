@@ -21,13 +21,14 @@ def get_json_object(content: str) -> dict[str, Any]:
 
 def analyse_match(client: Any, provider: str, model: str, job: str, cv: str) -> dict[str, Any]:
     system = "You are a precise CV screening assistant. Return only valid JSON, with no Markdown or commentary. Use status exactly 'match' or 'missing'."
-    prompt = f"""Extract the top 10 to 15 specific hard and soft-skill requirements from the job description and compare each against the CV.
+    prompt = f"""Extract the name of the position and the name of the enterprise or institution offering the job. Extract a brief description of the position.
+Extract the top 10 to 15 specific hard and soft-skill requirements from the job description and compare each against the CV.
 Use 'match' only when the CV provides credible evidence; use 'missing' when it does not or evidence is too weak. Keep each requirement concise and specific.
 
 Return exactly this JSON shape:
-{{"requirements": [{{"text": "5+ years Python", "status": "match"}}]}}
+{{"position_name":"", "institution_name":"", "brief_description":"", "requirements": [{{"text": "5+ years Python", "status": "match"}}]}}
 
-JOB DESCRIPTION:
+JOB FULL DESCRIPTION:
 ---
 {job}
 ---
@@ -37,6 +38,9 @@ CLEAN CV TEXT:
 {cv}
 ---"""
     data = get_json_object(call_ai(client, provider, model, system, prompt))
+    position_name = data.get("position_name")
+    institution_name = data.get("institution_name")
+    brief_description = data.get("brief_description")
     requirements = data.get("requirements")
     if not isinstance(requirements, list):
         raise ValueError("The AI response did not contain a requirements list.")
@@ -46,10 +50,8 @@ CLEAN CV TEXT:
         if not isinstance(item, dict):
             continue
         raw_text = item.get("text", "")
-        # Skip boolean or null-like raw_text values (they produce 'True'/'False')
         if isinstance(raw_text, bool) or raw_text is None:
             continue
-        # Normalize text to a string
         if isinstance(raw_text, (list, dict)):
             try:
                 text = json.dumps(raw_text, ensure_ascii=False)
@@ -57,14 +59,11 @@ CLEAN CV TEXT:
                 text = str(raw_text)
         else:
             text = str(raw_text).strip()
-        # Ignore non-informative values that stringified to 'false'/'true' etc
         if not text or text.lower() in {"false", "true", "none", "null"}:
             continue
-        # Ignore overly short fragments that are unlikely to be requirements
         if len(text) < 3:
             continue
         raw_status = item.get("status")
-        # Accept booleans or strings for status
         if isinstance(raw_status, bool):
             status = "match" if raw_status else "missing"
         elif isinstance(raw_status, str):
@@ -72,12 +71,10 @@ CLEAN CV TEXT:
         else:
             status = str(raw_status).strip().lower()
 
-        # Ignore empty or non-informative texts (e.g., boolean literals returned as text)
         if not text:
             continue
         if text.strip().lower() in {"true", "false", "null", "none", "0", "1"}:
             continue
-        # Heuristic: require at least one letter character in the text
         if not re.search(r"[A-Za-z]", text):
             continue
         if status not in {"match", "missing"}:
@@ -86,4 +83,4 @@ CLEAN CV TEXT:
 
     if not cleaned:
         raise ValueError("The AI did not return any valid requirements.")
-    return {"requirements": cleaned}
+    return {"position_name": position_name, "institution_name": institution_name, "brief_description": brief_description, "requirements": cleaned}

@@ -39,30 +39,35 @@ def initialise_state() -> None:
 
 def render_requirements(requirements: list[dict[str, str]]) -> None:
     for requirement in requirements:
-        raw_status = requirement.get("status")
-        # Normalize status
-        if isinstance(raw_status, bool):
-            match = bool(raw_status)
-        else:
-            match = str(raw_status).strip().lower() == "match"
-
-        colour, background, label = (("#15803d", "#f0fdf4", "MATCH") if match else ("#b91c1c", "#fef2f2", "MISSING"))
-
-        raw_text = requirement.get("text", "")
-        # Sanitize text so we never render raw booleans like True/False
-        if isinstance(raw_text, bool) or raw_text is None:
-            text = "(no requirement text returned)"
-        else:
-            text = str(raw_text).strip()
-            if not text or text.lower() in {"false", "true", "none", "null"}:
-                text = "(no requirement text returned)"
-
-        html = (
-            f'<div style="background:{background}; border-left:5px solid {colour}; padding:0.65rem 0.9rem; margin:0.45rem 0; border-radius:4px;'>
-            f'<span style="color:{colour}; font-weight:700; margin-right:0.7rem;">{label}</span>'
-            f"{text}</div>"
+        match = requirement.get("status") == "match"
+        colour, background, label = (
+            ("#15803d", "#f0fdf4", "MATCH") if match else ("#b91c1c", "#fef2f2", "MISSING")
         )
-        st.markdown(html, unsafe_allow_html=True)
+        text = requirement.get("text", "")
+        st.markdown(
+            f'<div style="background:{background}; border-left:5px solid {colour}; padding:0.65rem 0.9rem; margin:0.45rem 0; border-radius:4px;">'
+            f'<span style="color:{colour}; font-weight:700; margin-right:0.7rem;">{label}</span>'
+            f'{text}</div>',
+            unsafe_allow_html=True
+        )
+        
+def render_job_details(
+    position_name: str | None,
+    institution_name: str | None,
+    brief_description: str | None,
+) -> None:
+    """Render the extracted job summary before the skill comparison."""
+    position = str(position_name or "Job position").strip()
+    institution = str(institution_name or "").strip()
+    description = str(brief_description or "").strip()
+
+    st.subheader(position)
+    if institution:
+        st.caption(f"Institution: {institution}")
+    if description:
+        st.markdown(description)
+    else:
+        st.caption("No brief description was provided.")
 
 
 def main() -> None:
@@ -192,6 +197,7 @@ def main() -> None:
     if result:
         left, right = st.columns([1.35, 1])
         with left:
+            render_job_details(result.get("position_name"), result.get("institution_name"), result.get("brief_description"))
             st.subheader("Requirement match")
             render_requirements(result["requirements"])
         with right:
