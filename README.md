@@ -1,3 +1,5 @@
+![Job-CV generator logo](images/job_cv_ai_generator.jpg)
+
 # Job-CV Matcher & Tailor
 
 An AI based tool for people intensively applying to jobs.
