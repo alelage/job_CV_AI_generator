@@ -1,5 +1,7 @@
 # Job-CV Matcher & Tailor
 
+An AI based tool for people intensively applying to jobs.
+
 Automated assistant to compare a LaTeX CV with a job description, highlight gaps, and generate tailored LaTeX CVs and cover letters.
 
 Runs on your web browser.
@@ -47,9 +49,27 @@ Relies on AI. You will need to provide an **API key for any AI** service of your
 - Copy `credentials.json.example` to `credentials.json` and fill in your API keys.
 - Alternatively, you can use [Streamlit Cloud Secrets](https://docs.streamlit.io/streamlit-community-cloud/get-started/deploy-an-app/connect-to-data-sources/secrets-management) for deployment.
 
+
 ### 2. Install dependencies
+
+```bash
+make setup
+```
+
+### 3. Run locally:
 
 #### Option A: Using `make` (recommended on Linux/macOS/WSL/Git Bash)
 
 ```bash
-make setup
+make run
+```
+
+#### Option B: Direct call to streamlit server (any platform, after activating your virtual environment)
+
+```bash
+streamlit run app.py
+```
+
+
+
+
