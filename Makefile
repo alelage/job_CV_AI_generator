@@ -1,5 +1,15 @@
 .PHONY: setup install run test clean
 
+# Detect native Windows (CMD/PowerShell) and block it with a helpful message
+ifeq ($(OS),Windows_NT)
+    # Check if SHELL is a Unix-like shell (bash, sh, zsh)
+    # Git Bash and WSL set SHELL to something containing "bash" or "sh"
+    # Native CMD/PowerShell does NOT.
+    ifeq (,$(or $(findstring bash,$(SHELL)),$(findstring sh,$(SHELL)),$(findstring zsh,$(SHELL))))
+        $(error Native Windows (CMD/PowerShell) is not supported. Please use WSL (Windows Subsystem for Linux) or Git Bash.)
+    endif
+endif
+
 VENV=.venv
 PYTHON=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
